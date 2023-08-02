@@ -18,6 +18,11 @@ export default function Chat() {
     const loglock = async () => {
       try {
         if (!localStorage.getItem("chat-app-user")) navigate("/login");
+        else {
+          setCurrentUser(
+            await JSON.parse(localStorage.getItem("chat-app-user"))
+          );
+        }
       } catch (error) {
         console.log(error);
       }
@@ -25,20 +30,20 @@ export default function Chat() {
     loglock();
   }, [navigate]);
 
-
   useEffect(() => {
     const currUser = async () => {
       if (currentUser) {
         if (currentUser.isAvatarImageSet) {
           const data = await axios.get(`${allUsersRoute}/${currentUser._id}`);
           setContact(data.data);
+          setIsLoaded(true);
         } else {
           navigate("/setavatar");
         }
       }
     };
     currUser();
-  }, [currentUser, navigate]);
+  }, [currentUser,navigate]);
 
   const handleChatChange = (chat) => {
     setCurrentChat(chat);
@@ -46,20 +51,20 @@ export default function Chat() {
 
   return (
     <>
-    <Container>
-      <div className="container">
-        <Contacts
-          contacts={contacts}
-          currentUser={currentUser}
-          changeChat={handleChatChange}
-        ></Contacts>
-        {isLoaded && currentChat === undefined ? (
-          <Welcome currentUser={currentUser} />
-        ) : (
-          <ChatContainer currentChat={currentChat} />
-        )}
-      </div>
-    </Container>
+      <Container>
+        <div className="container">
+          <Contacts
+            contacts={contacts}
+            currentUser={currentUser}
+            changeChat={handleChatChange}
+          ></Contacts>
+          {isLoaded && currentChat === undefined ? (
+            <Welcome currentUser={currentUser} />
+          ) : (
+            <ChatContainer currentChat={currentChat} />
+          )}
+        </div>
+      </Container>
     </>
   );
 }
