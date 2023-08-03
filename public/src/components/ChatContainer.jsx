@@ -1,19 +1,42 @@
-import React from "react";
-import { styled } from "styled-components";
-import Logout from './Logout';
-import ChatInput from './ChatInput';
-import Messages from './Messages';
-import axios from "axios"
-import { sendMessageRoute } from './../utils/APIRoutes';
+import React, { useState, useEffect } from "react";
+import styled from "styled-components";
+import Logout from "./Logout";
+import ChatInput from "./ChatInput";
+import axios from "axios";
+import { getAllMessagesRoute, sendMessageRoute } from "./../utils/APIRoutes";
 
-export default function ChatContainer({ currentChat , currentUser}) {
-  const handleSendMsg =async(msg)=> {
-    await axios.post(sendMessageRoute,{
+export default function ChatContainer({ currentChat, currentUser }) {
+  const [messages, setMessages] = useState([]);
+
+  const handleSendMsg = async (msg) => {
+    await axios.post(sendMessageRoute, {
       from: currentUser._id,
       to: currentChat._id,
       message: msg,
-    })
+    });
+  };
+
+  useEffect(() => {
+    const response = async () => {
+      if(currentChat && currentUser ){
+      try {
+  
+       const res =  await axios.post(getAllMessagesRoute, {
+          from: currentUser._id,
+          to: currentChat._id,
+        });
+        
+        setMessages(res.data);
+        console.log(JSON.stringify(res.data));
+      } catch (e) {
+        console.log(e);
+      }
+
+    }
   }
+    response(); 
+  }, [currentChat, currentUser]);
+
   return (
     <>
       {currentChat && (
@@ -30,9 +53,25 @@ export default function ChatContainer({ currentChat , currentUser}) {
                 <h3>{currentChat.username}</h3>
               </div>
             </div>
-            <Logout/>
+            <Logout />
           </div>
-          <Messages  />
+          <div className="chat-messages">
+            {messages.map((message) => {
+              return (
+                <div>
+                  <div
+                    className={`message ${
+                      message.fromSelf ? "sended" : "recieved"
+                    }`}
+                  >
+                    <div className="content ">
+                      <p>{message.message} </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
           <ChatInput handleSendMsg={handleSendMsg} />
         </Container>
       )}
