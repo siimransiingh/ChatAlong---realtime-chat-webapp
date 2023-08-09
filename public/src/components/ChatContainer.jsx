@@ -1,24 +1,51 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import Logout from "./Logout";
 import ChatInput from "./ChatInput";
 import axios from "axios";
 import { getAllMessagesRoute, sendMessageRoute } from "./../utils/APIRoutes";
+import {v4 as uuidv4} from "uuid"
 
-export default function ChatContainer({ currentChat, currentUser }) {
+export default function ChatContainer({ currentChat, currentUser,socket }) {
   const [messages, setMessages] = useState([]);
-
+  const [arrivalMsg, setArrivalMsg] = useState(null);
+  const scrollRef = useRef();
   const handleSendMsg = async (msg) => {
     await axios.post(sendMessageRoute, {
       from: currentUser._id,
       to: currentChat._id,
       message: msg,
     });
+    socket.current.emit("send-msg",{
+      to: currentChat._id,
+      from: currentUser._id,
+      message: msg,
+    })
+
+    const msgs = [...messages];
+    msgs.push({fromSelf:true,message:msg});
+    setMessages(msgs);
   };
+
+  useEffect(()=>{
+    if(socket.current)
+    socket.current.on("msg-recieve",(msg)=>{
+      setArrivalMsg({fromSelf:false,message:msg})
+    })
+  })
+
+  useEffect(()=>{
+    arrivalMsg && setMessages((prev)=>[...prev,arrivalMsg])
+  },[arrivalMsg])
+
+  useEffect(()=>{
+    scrollRef.current?.scrollIntoView({behaviour : "smooth"})
+  },[messages]);
 
   useEffect(() => {
     const response = async () => {
       if (currentChat && currentUser) {
+        
         try {
           const res = await axios.post(getAllMessagesRoute, {
             from: currentUser._id,
@@ -55,7 +82,7 @@ export default function ChatContainer({ currentChat, currentUser }) {
           <div className="chat-messages">
             {messages.map((message) => {
               return (
-                <div>
+                <div ref={scrollRef} key={uuidv4()}>
                   <div
                     className={`message ${
                       message.fromSelf ? "sended" : "recieved"
