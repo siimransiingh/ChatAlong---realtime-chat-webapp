@@ -18,23 +18,20 @@ export default function ChatContainer({ currentChat, currentUser }) {
 
   useEffect(() => {
     const response = async () => {
-      if(currentChat && currentUser ){
-      try {
-  
-       const res =  await axios.post(getAllMessagesRoute, {
-          from: currentUser._id,
-          to: currentChat._id,
-        });
-        
-        setMessages(res.data);
-        console.log(JSON.stringify(res.data));
-      } catch (e) {
-        console.log(e);
+      if (currentChat && currentUser) {
+        try {
+          const res = await axios.post(getAllMessagesRoute, {
+            from: currentUser._id,
+            to: currentChat._id,
+          });
+          setMessages(res.data);
+          console.log(JSON.stringify(res.data));
+        } catch (e) {
+          console.log(e);
+        }
       }
-
-    }
-  }
-    response(); 
+    };
+    response();
   }, [currentChat, currentUser]);
 
   return (
